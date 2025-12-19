@@ -41,11 +41,8 @@ app.add_middleware(
 static_dir = Path(__file__).parent / "static"
 static_dir.mkdir(exist_ok=True)
 
+# location of built frontend (if present)
 frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
-if frontend_dist.exists():
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
-else:
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 detector = YoloDetector()
 calculator = EfficiencyCalculator(window_minutes=int(os.getenv("WINDOW_MINUTES", 120)))
@@ -147,3 +144,11 @@ def demo_seed(db: Session = Depends(get_db)):
     db.add_all(sample_events)
     db.commit()
     return {"message": "Seeded demo data", "packer_id": packer.id}
+
+
+# Mount static frontend after API routes so `/api/*` is handled by FastAPI routes.
+# This mount happens at import time but after routes are defined above.
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+else:
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
