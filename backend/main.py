@@ -40,7 +40,12 @@ app.add_middleware(
 
 static_dir = Path(__file__).parent / "static"
 static_dir.mkdir(exist_ok=True)
-app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+
+frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+else:
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 detector = YoloDetector()
 calculator = EfficiencyCalculator(window_minutes=int(os.getenv("WINDOW_MINUTES", 120)))
